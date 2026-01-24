@@ -69,6 +69,7 @@
 package com.example.LMS.Security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -115,19 +116,14 @@ public class SecurityConfig {
 //                )
 
                 .authorizeHttpRequests(auth -> auth
-                        // 🔥 ALLOW CORS PREFLIGHT
-                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // 🔥 AUTH ENDPOINTS
-                        .requestMatchers("/auth/login", "/auth/register").permitAll()
-
-                        // 🔐 ROLE BASED
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()   // 🔥 ADD THIS
+                        .requestMatchers("/auth/login").permitAll()
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/librarian/**").hasAuthority("LIBRARIAN")
                         .requestMatchers("/user/**").hasAuthority("USER")
-
                         .anyRequest().authenticated()
                 )
+
 
 
                 // ✅ JWT filter
@@ -142,8 +138,10 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
+                "http://localhost:5174",
                 "https://keen-cajeta-c8b0e0.netlify.app"
         ));
+
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of(
