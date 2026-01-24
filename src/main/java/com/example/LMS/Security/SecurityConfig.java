@@ -106,13 +106,29 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
 
                 // ✅ authorization rules
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/auth/login", "/auth/register").permitAll()
+//                        .requestMatchers("/admin/**").hasAuthority("ADMIN")
+//                        .requestMatchers("/librarian/**").hasAuthority("LIBRARIAN")
+//                        .requestMatchers("/user/**").hasAuthority("USER")
+//                        .anyRequest().authenticated()
+//                )
+
                 .authorizeHttpRequests(auth -> auth
+                        // 🔥 ALLOW CORS PREFLIGHT
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 🔥 AUTH ENDPOINTS
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
+
+                        // 🔐 ROLE BASED
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/librarian/**").hasAuthority("LIBRARIAN")
                         .requestMatchers("/user/**").hasAuthority("USER")
+
                         .anyRequest().authenticated()
                 )
+
 
                 // ✅ JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -126,12 +142,18 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost:5174",
-                "https://keen-cajeta-c8b0e0.netlify.app" // 🔥 YOUR NETLIFY DOMAIN
+                "https://keen-cajeta-c8b0e0.netlify.app"
         ));
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin"
+        ));
+
         config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
