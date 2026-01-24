@@ -110,3 +110,4 @@ export async function apiFetch(
         return {};
     }
 }
+console.log("API BASE =", API_BASE);
