@@ -16,6 +16,11 @@ public class JwtUtil {
 
     public String generateToken(String username, String role) {
 
+        // ensure ROLE_ prefix
+        if (!role.startsWith("ROLE_")) {
+            role = "ROLE_" + role;
+        }
+
         return Jwts.builder()
                 .setSubject(username)
                 .claim("role", role)
@@ -24,7 +29,6 @@ public class JwtUtil {
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
-
     // Extract Username
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();

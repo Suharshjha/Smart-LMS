@@ -111,3 +111,20 @@ export async function apiFetch(
     }
 }
 console.log("API BASE =", API_BASE);
+
+// src/lib/api.ts
+
+export const fetchRecommendations = async (token: string) => {
+    const res = await fetch(`${API_BASE}/user/recommendations`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!res.ok) {
+        throw new Error("Failed to load recommendations");
+    }
+
+    return res.json();
+};
+

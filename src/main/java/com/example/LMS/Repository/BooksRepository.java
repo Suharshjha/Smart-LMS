@@ -1,10 +1,12 @@
 package com.example.LMS.Repository;
 
 import com.example.LMS.Models.Books;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.awt.print.Book;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -27,7 +29,6 @@ public interface BooksRepository extends JpaRepository<Books, Long> {
     List<Books> findPopularBooks();
 
     // existing methods...
-
     long countByIssuedTrue();
 
     // count overdue: dueDate before today AND issued = true
