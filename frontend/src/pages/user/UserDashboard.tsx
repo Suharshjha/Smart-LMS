@@ -410,16 +410,32 @@ const UserDashboard = () => {
   // --------------------------------------------
   // LOAD ML RECOMMENDATIONS
   // --------------------------------------------
+
   useEffect(() => {
     if (!userId) return;
 
     apiFetch(`/user/recommendations/${userId}`)
-        .then((res) => {
-          setRecommendations(res.data ?? []);
-          if (res.message) toast.message(res.message);
+        .then(res => {
+          if (Array.isArray(res)) {
+            setRecommendations(res);
+          } else {
+            setRecommendations([]);
+            if (res.message) toast.message(res.message);
+          }
         })
         .catch(console.error);
   }, [userId]);
+
+  // useEffect(() => {
+  //   if (!userId) return;
+  //
+  //   apiFetch(`/user/recommendations/${userId}`)
+  //       .then((res) => {
+  //         setRecommendations(res.data ?? []);
+  //         if (res.message) toast.message(res.message);
+  //       })
+  //       .catch(console.error);
+  // }, [userId]);
 
   // --------------------------------------------
   // INITIAL LOAD

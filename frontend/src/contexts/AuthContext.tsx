@@ -125,12 +125,12 @@
 //         body: JSON.stringify({ username, password }),
 //       });
 //
-//       // Backend sends -> userId, username, role, jwtToken
+//       // Backend sends -> userId, username, role, token
 //       const userData: User = {
 //         userId: result.userId,
 //         username: result.username,
 //         role: result.role,
-//         token: result.jwtToken  // <-- IMPORTANT FIX
+//         token: result.token  // <-- IMPORTANT FIX
 //       };
 //
 //       localStorage.setItem("lms_user", JSON.stringify(userData));
@@ -178,20 +178,18 @@
 
 
 // src/contexts/AuthContext.tsx
-
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { apiFetch } from "@/lib/api";
 
-
 export type UserRole = "ADMIN" | "LIBRARIAN" | "USER";
 
 interface User {
+  userId: number;
   username: string;
   role: UserRole;
-  token: string;
-  userId: number;
+  token: string;   // ✅ MATCH BACKEND
 }
 
 interface AuthContextType {
@@ -207,34 +205,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const navigate = useNavigate();
 
+  // ✅ Restore session on refresh
   useEffect(() => {
     const saved = localStorage.getItem("lms_user");
-    if (saved) setUser(JSON.parse(saved));
+    if (saved) {
+      setUser(JSON.parse(saved));
+    }
   }, []);
 
-  // ----------------------------------------------
-  // ⭐ FIXED LOGIN FUNCTION — NOW STORES jwtToken ⭐
-  // ----------------------------------------------
+  // ✅ FIXED LOGIN
   const login = async (username: string, password: string) => {
     try {
-      const result = await apiFetch("/auth/login", {
+      const res = await apiFetch("/auth/login", {
         method: "POST",
         body: JSON.stringify({ username, password }),
       });
 
-      if (!result.token) {
-        toast.error("Login response missing token!");
+      const token =
+          res.token || res.accessToken;
+
+      if (!token) {
+        toast.error("Login failed: JWT missing");
         return;
       }
 
-
       const userData: User = {
-        userId: result.userId,
-        username: result.username,
-        role: result.role,
-        token: result.token,   // <-- FIXED HERE
+        userId: res.userId,
+        username: res.username,
+        role: res.role,
+        token: token,
       };
 
+      // ✅ SAVE ONCE, CORRECTLY
       localStorage.setItem("lms_user", JSON.stringify(userData));
       setUser(userData);
 
@@ -257,7 +259,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-      <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+      <AuthContext.Provider
+          value={{
+            user,
+            login,
+            logout,
+            isAuthenticated: !!user,
+          }}
+      >
         {children}
       </AuthContext.Provider>
   );

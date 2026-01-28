@@ -23,7 +23,12 @@ const Login = () => {
   }, [isAuthenticated, user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
+    console.log("🔥 Sign In clicked");
+    console.log("Username:", username);
+    console.log("Password:", password);
+
     await login(username, password);
   };
 

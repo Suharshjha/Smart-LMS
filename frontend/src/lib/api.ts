@@ -54,27 +54,100 @@
 // }
 //
 
+//
+// // ✅ Read API base URL from environment
+// const API_BASE = import.meta.env.VITE_API_BASE_URL;
+//
+// export async function apiFetch(
+//     endpoint: string,
+//     options: RequestInit = {}
+// ) {
+//     // Read logged-in user from localStorage
+//     const userStr = localStorage.getItem("lms_user");
+//     const user = userStr ? JSON.parse(userStr) : null;
+//
+//     // JWT token (supports both keys)
+//     const token = user?.jwtToken || user?.token || null;
+//
+//     const headers: HeadersInit = {
+//         "Content-Type": "application/json",
+//         ...(options.headers || {}),
+//     };
+//
+//     // Attach Bearer token if exists
+//     if (token) {
+//         headers["Authorization"] = `Bearer ${token}`;
+//     }
+//
+//     const response = await fetch(`${API_BASE}${endpoint}`, {
+//         ...options,
+//         headers,
+//     });
+//
+//     // ❗ Unauthorized
+//     if (response.status === 401) {
+//         console.error("❌ Unauthorized — Invalid or missing JWT");
+//         localStorage.removeItem("lms_user");
+//         return Promise.reject({ error: "Unauthorized", status: 401 });
+//     }
+//
+//     // ❗ Any other error
+//     if (!response.ok) {
+//         let err: any = {};
+//         try {
+//             err = await response.json();
+//         } catch {
+//             err = { error: "Unknown server error", status: response.status };
+//         }
+//         console.error("❌ API Error:", err);
+//         return Promise.reject(err);
+//     }
+//
+//     // ✅ Return JSON safely
+//     try {
+//         return await response.json();
+//     } catch {
+//         return {};
+//     }
+// }
+// console.log("API BASE =", API_BASE);
+//
+// // src/lib/api.ts
+//
+// export const fetchRecommendations = async (token: string) => {
+//     const res = await fetch(`${API_BASE}/user/recommendations`, {
+//         headers: {
+//             Authorization: `Bearer ${token}`,
+//         },
+//     });
+//
+//     if (!res.ok) {
+//         throw new Error("Failed to load recommendations");
+//     }
+//
+//     return res.json();
+// };
+//
 
-// ✅ Read API base URL from environment
+
+// src/lib/api.ts
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
 export async function apiFetch(
     endpoint: string,
     options: RequestInit = {}
 ) {
-    // Read logged-in user from localStorage
     const userStr = localStorage.getItem("lms_user");
     const user = userStr ? JSON.parse(userStr) : null;
 
-    // JWT token (supports both keys)
-    const token = user?.jwtToken || user?.token || null;
+    const token = user?.token;
 
     const headers: HeadersInit = {
         "Content-Type": "application/json",
         ...(options.headers || {}),
     };
 
-    // Attach Bearer token if exists
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
     }
@@ -84,47 +157,27 @@ export async function apiFetch(
         headers,
     });
 
-    // ❗ Unauthorized
-    if (response.status === 401) {
-        console.error("❌ Unauthorized — Invalid or missing JWT");
+    if (response.status === 401 || response.status === 403) {
+        console.error("❌ Unauthorized — JWT expired or missing");
         localStorage.removeItem("lms_user");
-        return Promise.reject({ error: "Unauthorized", status: 401 });
+        throw new Error("Unauthorized");
     }
 
-    // ❗ Any other error
     if (!response.ok) {
-        let err: any = {};
+        let err: any;
         try {
             err = await response.json();
         } catch {
-            err = { error: "Unknown server error", status: response.status };
+            err = { error: "Unknown server error" };
         }
-        console.error("❌ API Error:", err);
-        return Promise.reject(err);
+        throw err;
     }
 
-    // ✅ Return JSON safely
     try {
         return await response.json();
     } catch {
         return {};
     }
 }
+
 console.log("API BASE =", API_BASE);
-
-// src/lib/api.ts
-
-export const fetchRecommendations = async (token: string) => {
-    const res = await fetch(`${API_BASE}/user/recommendations`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
-
-    if (!res.ok) {
-        throw new Error("Failed to load recommendations");
-    }
-
-    return res.json();
-};
-
