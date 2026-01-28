@@ -1,3 +1,329 @@
+// import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { BookMarked, Search, Clock, CheckCircle } from "lucide-react";
+// import { apiFetch } from "@/lib/api";
+// import { Badge } from "@/components/ui/badge";
+// import { toast } from "sonner";
+// import { Button } from "@/components/ui/button";
+// import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+// import { Input } from "@/components/ui/input";
+//
+// interface Book {
+//   bookId: number;
+//   bookName: string;
+//   authorName: string;
+// }
+//
+// interface MyBook {
+//   id: number;
+//   bookName: string;
+//   authorName: string;
+//   dueDate: string;
+//   issueDate: string;
+//   status: string;
+// }
+//
+//
+// const UserDashboard = () => {
+//   const navigate = useNavigate();
+//
+//   const [borrowed, setBorrowed] = useState<MyBook[]>([]);
+//   const [history, setHistory] = useState<any[]>([]);
+//   const [totalBooks, setTotalBooks] = useState(0);
+//   const [pendingRequests, setPendingRequests] = useState(0);
+//   const [allBooks, setAllBooks] = useState<Book[]>([]);
+//   const [loading, setLoading] = useState(true);
+//
+//   // Request modal
+//   const [open, setOpen] = useState(false);
+//   const [searchBook, setSearchBook] = useState("");
+//   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+//
+//   const [recommendations, setRecommendations] = useState([]);
+//
+//   // useEffect(() => {
+//   //   apiFetch(`/user/recommendations/${userId}`)
+//   //       .then(setRecommendations)
+//   //       .catch(() => {});
+//   // }, []);
+//
+//
+//   const userData = JSON.parse(localStorage.getItem("lms_user") || "null");
+//   const userId = userData?.userId;
+//
+//   useEffect(() => {
+//     if (!userId) return;
+//
+//     apiFetch(`/user/recommendations/${userId}`)
+//         .then(res => {
+//           setRecommendations(res.data ?? []);
+//           if (res.message) toast.message(res.message);
+//         })
+//         .catch(console.error);
+//   }, [userId]);
+//
+//
+//
+//   const loadDashboard = async () => {
+//     try {
+//       const myBooks = await apiFetch(`/user/issued/${userId}`);
+//       const allBooksApi = await apiFetch("/user/all-books");
+//
+//       let hist = [];
+//       try {
+//         hist = await apiFetch(`/user/history/${userId}`);
+//       } catch {}
+//
+//       const normalized = myBooks
+//           .filter((b: any) =>
+//               ["APPROVED", "ISSUED", "ACTIVE"].includes(b.status)
+//           )
+//           .map((b: any) => ({
+//             ...b,
+//             dueDate: b.dueDate ?? "No Due Date",
+//             issueDate: b.issueDate ?? "Not Issued",
+//           }));
+//
+//       setBorrowed(normalized);
+//       setAllBooks(allBooksApi);
+//       setTotalBooks(allBooksApi.length);
+//       setPendingRequests(0);
+//       setHistory(hist);
+//
+//
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Failed to load dashboard");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+//
+//
+//   // --------------------------------------------
+//   // LIVE SEARCH
+//   // --------------------------------------------
+//   const searchBooksLive = async (keyword: string) => {
+//     setSearchBook(keyword);
+//
+//     if (keyword.trim() === "") {
+//       setAllBooks([]);
+//       return;
+//     }
+//
+//     try {
+//       const res = await apiFetch(`/user/search?keyword=${keyword}`);
+//       setAllBooks(res);
+//     } catch {
+//       setAllBooks([]);
+//     }
+//   };
+//
+//   // --------------------------------------------
+//   // SEND BOOK REQUEST
+//   // --------------------------------------------
+//   const requestIssue = async () => {
+//     if (!selectedBook) return toast.error("Select a book first");
+//
+//     try {
+//       await apiFetch("/user/request-book", {
+//         method: "POST",
+//         body: JSON.stringify({
+//           userId,
+//           bookId: selectedBook.bookId,
+//         }),
+//       });
+//
+//       toast.success(`Issue request sent for: ${selectedBook.bookName}`);
+//       setOpen(false);
+//       setSelectedBook(null);
+//       setSearchBook("");
+//       setAllBooks([]);
+//
+//       loadDashboard();
+//     } catch {
+//       toast.error("Failed to send request");
+//     }
+//   };
+//
+//   useEffect(() => {
+//     loadDashboard();
+//   }, []);
+//
+//   if (loading) {
+//     return <div className="p-8 text-center text-lg font-semibold">Loading your dashboard...</div>;
+//   }
+//
+//   const stats = [
+//     { title: "Books Borrowed", value: borrowed.length, icon: BookMarked, color: "text-primary" },
+//     { title: "Pending Requests", value: pendingRequests, icon: Clock, color: "text-destructive" },
+//     { title: "Books Returned", value: history.length, icon: CheckCircle, color: "text-accent" },
+//     { title: "Available Books", value: totalBooks, icon: Search, color: "text-secondary" },
+//   ];
+//
+//   return (
+//       <div className="p-8 space-y-8">
+//
+//         {/* Header */}
+//         <div>
+//           <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
+//           <p className="text-muted-foreground mt-1">Welcome back! Track your books & requests.</p>
+//         </div>
+//
+//         {/* Stats */}
+//         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+//           {stats.map((stat) => (
+//               <Card key={stat.title} className="shadow-soft hover:shadow-medium transition-smooth">
+//                 <CardHeader className="flex flex-row items-center justify-between pb-2">
+//                   <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
+//                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
+//                 </CardHeader>
+//                 <CardContent>
+//                   <div className="text-2xl font-bold">{stat.value}</div>
+//                 </CardContent>
+//               </Card>
+//           ))}
+//         </div>
+//
+//         {/* Recommended Books */}
+//         <Card>
+//           <CardHeader>
+//             <CardTitle>Recommended For You</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             {recommendations.length === 0 && (
+//                 <p className="text-muted-foreground">
+//                   Borrow more books to get personalized recommendations
+//                 </p>
+//             )}
+//
+//             {recommendations.map((b: any) => (
+//                 <div key={b.book_id} className="p-3 border rounded mb-2">
+//                   <p className="font-medium">{b.book_name}</p>
+//                   <p className="text-sm text-muted-foreground">
+//                     {b.author_name} • {b.book_category}
+//                   </p>
+//                 </div>
+//             ))}
+//           </CardContent>
+//         </Card>
+//
+//
+//         {/* Borrowed Books */}
+//         <Card className="shadow-soft">
+//           <CardHeader>
+//             <CardTitle>Currently Borrowed Books</CardTitle>
+//           </CardHeader>
+//           <CardContent>
+//             <div className="space-y-3">
+//               {borrowed.length === 0 && (
+//                   <p className="text-muted-foreground text-center py-4">You haven't borrowed any books yet.</p>
+//               )}
+//
+//               {borrowed.map((book) => (
+//                   <div
+//                       key={book.id}
+//                       className="flex items-center justify-between p-4 bg-muted rounded-lg"
+//                   >
+//                     <div className="flex-1">
+//                       <p className="font-medium">{book.bookName}</p>
+//                       <p className="text-sm text-muted-foreground">{book.authorName}</p>
+//                     </div>
+//                     <div className="text-right">
+//                       <p className="text-sm font-medium">Due: {book.dueDate}</p>
+//                       <Badge variant="default">Borrowed</Badge>
+//                     </div>
+//                   </div>
+//               ))}
+//             </div>
+//           </CardContent>
+//         </Card>
+//
+//         {/* Quick Actions + History */}
+//         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+//
+//           {/* Quick Actions */}
+//           <Card className="shadow-soft">
+//             <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
+//             <CardContent>
+//               <div className="space-y-3">
+//                 <Button className="w-full p-3 text-left" onClick={() => setOpen(true)}>Request a Book</Button>
+//                 <Button className="w-full p-3 text-left bg-secondary" onClick={() => navigate("/user/my-books")}>View My Books</Button>
+//                 <Button className="w-full p-3 text-left bg-accent text-accent-foreground"
+//                         onClick={() => navigate("/user/my-books")}>
+//                   Renew Books
+//                 </Button>
+//               </div>
+//             </CardContent>
+//           </Card>
+//
+//           {/* History */}
+//           <Card className="shadow-soft">
+//             <CardHeader><CardTitle>Reading History</CardTitle></CardHeader>
+//             <CardContent>
+//               {history.length === 0 && (
+//                   <p className="text-center text-muted-foreground py-4">No books returned yet.</p>
+//               )}
+//
+//               <div className="space-y-3">
+//                 {history.map((h, i) => (
+//                     <div key={i} className="p-3 bg-muted rounded-lg">
+//                       <p className="font-medium">{h.bookName}</p>
+//                       <p className="text-sm text-muted-foreground">Returned on {h.returnDate}</p>
+//                     </div>
+//                 ))}
+//               </div>
+//             </CardContent>
+//           </Card>
+//
+//
+//         </div>
+//
+//         {/* REQUEST BOOK MODAL */}
+//         <Dialog open={open} onOpenChange={setOpen}>
+//           <DialogContent>
+//             <DialogHeader>
+//               <DialogTitle>Request a Book</DialogTitle>
+//             </DialogHeader>
+//
+//             <Input
+//                 placeholder="Search for a book..."
+//                 value={searchBook}
+//                 onChange={(e) => searchBooksLive(e.target.value)}
+//             />
+//
+//             <div className="max-h-60 overflow-y-auto mt-3 space-y-2">
+//               {allBooks.map((b) => (
+//                   <div
+//                       key={b.bookId}
+//                       onClick={() => setSelectedBook(b)}
+//                       className={`p-3 rounded-md border cursor-pointer ${
+//                           selectedBook?.bookId === b.bookId ? "bg-primary text-white" : "bg-muted"
+//                       }`}
+//                   >
+//                     <p className="font-medium">{b.bookName}</p>
+//                     <p className="text-sm text-muted-foreground">{b.authorName}</p>
+//                   </div>
+//               ))}
+//
+//               {allBooks.length === 0 && (
+//                   <p className="text-center text-sm text-muted-foreground py-2">No books found.</p>
+//               )}
+//             </div>
+//
+//             <Button className="w-full mt-4" onClick={requestIssue}>Request Book</Button>
+//           </DialogContent>
+//         </Dialog>
+//
+//       </div>
+//   );
+// };
+//
+// export default UserDashboard;
+
+
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,37 +353,34 @@ interface MyBook {
 const UserDashboard = () => {
   const navigate = useNavigate();
 
+  const userData = JSON.parse(localStorage.getItem("lms_user") || "null");
+  const userId = userData?.userId;
+
+  // Dashboard states
   const [borrowed, setBorrowed] = useState<MyBook[]>([]);
   const [history, setHistory] = useState<any[]>([]);
   const [totalBooks, setTotalBooks] = useState(0);
-  const [pendingRequests, setPendingRequests] = useState(0);
+  const [pendingRequests] = useState(0);
   const [allBooks, setAllBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Recommendation state
+  const [recommendations, setRecommendations] = useState<any[]>([]);
 
   // Request modal
   const [open, setOpen] = useState(false);
   const [searchBook, setSearchBook] = useState("");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
 
-  const [recommendations, setRecommendations] = useState([]);
-
-  useEffect(() => {
-    apiFetch(`/user/recommendations/${userId}`)
-        .then(setRecommendations)
-        .catch(() => {});
-  }, []);
-
-
-  const userData = JSON.parse(localStorage.getItem("lms_user") || "null");
-  // const userId = userData?.userId;
-  const userId = JSON.parse(localStorage.getItem("lms_user")!).userId;
-
+  // --------------------------------------------
+  // LOAD DASHBOARD DATA (DB)
+  // --------------------------------------------
   const loadDashboard = async () => {
     try {
       const myBooks = await apiFetch(`/user/issued/${userId}`);
       const allBooksApi = await apiFetch("/user/all-books");
 
-      let hist = [];
+      let hist: any[] = [];
       try {
         hist = await apiFetch(`/user/history/${userId}`);
       } catch {}
@@ -75,9 +398,7 @@ const UserDashboard = () => {
       setBorrowed(normalized);
       setAllBooks(allBooksApi);
       setTotalBooks(allBooksApi.length);
-      setPendingRequests(0);
       setHistory(hist);
-
     } catch (err) {
       console.error(err);
       toast.error("Failed to load dashboard");
@@ -86,6 +407,27 @@ const UserDashboard = () => {
     }
   };
 
+  // --------------------------------------------
+  // LOAD ML RECOMMENDATIONS
+  // --------------------------------------------
+  useEffect(() => {
+    if (!userId) return;
+
+    apiFetch(`/user/recommendations/${userId}`)
+        .then((res) => {
+          setRecommendations(res.data ?? []);
+          if (res.message) toast.message(res.message);
+        })
+        .catch(console.error);
+  }, [userId]);
+
+  // --------------------------------------------
+  // INITIAL LOAD
+  // --------------------------------------------
+  useEffect(() => {
+    if (!userId) return;
+    loadDashboard();
+  }, [userId]);
 
   // --------------------------------------------
   // LIVE SEARCH
@@ -133,19 +475,19 @@ const UserDashboard = () => {
     }
   };
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
-
   if (loading) {
-    return <div className="p-8 text-center text-lg font-semibold">Loading your dashboard...</div>;
+    return (
+        <div className="p-8 text-center text-lg font-semibold">
+          Loading your dashboard...
+        </div>
+    );
   }
 
   const stats = [
-    { title: "Books Borrowed", value: borrowed.length, icon: BookMarked, color: "text-primary" },
-    { title: "Pending Requests", value: pendingRequests, icon: Clock, color: "text-destructive" },
-    { title: "Books Returned", value: history.length, icon: CheckCircle, color: "text-accent" },
-    { title: "Available Books", value: totalBooks, icon: Search, color: "text-secondary" },
+    { title: "Books Borrowed", value: borrowed.length, icon: BookMarked },
+    { title: "Pending Requests", value: pendingRequests, icon: Clock },
+    { title: "Books Returned", value: history.length, icon: CheckCircle },
+    { title: "Available Books", value: totalBooks, icon: Search },
   ];
 
   return (
@@ -153,17 +495,19 @@ const UserDashboard = () => {
 
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
-          <p className="text-muted-foreground mt-1">Welcome back! Track your books & requests.</p>
+          <h1 className="text-3xl font-bold">My Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back! Track your books & requests.
+          </p>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat) => (
-              <Card key={stat.title} className="shadow-soft hover:shadow-medium transition-smooth">
+              <Card key={stat.title}>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                  <CardTitle className="text-sm">{stat.title}</CardTitle>
+                  <stat.icon className="h-5 w-5" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{stat.value}</div>
@@ -184,7 +528,7 @@ const UserDashboard = () => {
                 </p>
             )}
 
-            {recommendations.map((b: any) => (
+            {recommendations.map((b) => (
                 <div key={b.book_id} className="p-3 border rounded mb-2">
                   <p className="font-medium">{b.book_name}</p>
                   <p className="text-sm text-muted-foreground">
@@ -195,78 +539,34 @@ const UserDashboard = () => {
           </CardContent>
         </Card>
 
-
         {/* Borrowed Books */}
-        <Card className="shadow-soft">
+        <Card>
           <CardHeader>
             <CardTitle>Currently Borrowed Books</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {borrowed.length === 0 && (
-                  <p className="text-muted-foreground text-center py-4">You haven't borrowed any books yet.</p>
-              )}
+            {borrowed.length === 0 && (
+                <p className="text-muted-foreground text-center py-4">
+                  You haven't borrowed any books yet.
+                </p>
+            )}
 
-              {borrowed.map((book) => (
-                  <div
-                      key={book.id}
-                      className="flex items-center justify-between p-4 bg-muted rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium">{book.bookName}</p>
-                      <p className="text-sm text-muted-foreground">{book.authorName}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">Due: {book.dueDate}</p>
-                      <Badge variant="default">Borrowed</Badge>
-                    </div>
+            {borrowed.map((book) => (
+                <div key={book.id} className="flex justify-between p-4 bg-muted rounded-lg">
+                  <div>
+                    <p className="font-medium">{book.bookName}</p>
+                    <p className="text-sm text-muted-foreground">{book.authorName}</p>
                   </div>
-              ))}
-            </div>
+                  <div className="text-right">
+                    <p className="text-sm">Due: {book.dueDate}</p>
+                    <Badge>Borrowed</Badge>
+                  </div>
+                </div>
+            ))}
           </CardContent>
         </Card>
 
-        {/* Quick Actions + History */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-          {/* Quick Actions */}
-          <Card className="shadow-soft">
-            <CardHeader><CardTitle>Quick Actions</CardTitle></CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <Button className="w-full p-3 text-left" onClick={() => setOpen(true)}>Request a Book</Button>
-                <Button className="w-full p-3 text-left bg-secondary" onClick={() => navigate("/user/my-books")}>View My Books</Button>
-                <Button className="w-full p-3 text-left bg-accent text-accent-foreground"
-                        onClick={() => navigate("/user/my-books")}>
-                  Renew Books
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* History */}
-          <Card className="shadow-soft">
-            <CardHeader><CardTitle>Reading History</CardTitle></CardHeader>
-            <CardContent>
-              {history.length === 0 && (
-                  <p className="text-center text-muted-foreground py-4">No books returned yet.</p>
-              )}
-
-              <div className="space-y-3">
-                {history.map((h, i) => (
-                    <div key={i} className="p-3 bg-muted rounded-lg">
-                      <p className="font-medium">{h.bookName}</p>
-                      <p className="text-sm text-muted-foreground">Returned on {h.returnDate}</p>
-                    </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-
-        </div>
-
-        {/* REQUEST BOOK MODAL */}
+        {/* Request Book Modal */}
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogContent>
             <DialogHeader>
@@ -285,23 +585,22 @@ const UserDashboard = () => {
                       key={b.bookId}
                       onClick={() => setSelectedBook(b)}
                       className={`p-3 rounded-md border cursor-pointer ${
-                          selectedBook?.bookId === b.bookId ? "bg-primary text-white" : "bg-muted"
+                          selectedBook?.bookId === b.bookId
+                              ? "bg-primary text-white"
+                              : "bg-muted"
                       }`}
                   >
                     <p className="font-medium">{b.bookName}</p>
-                    <p className="text-sm text-muted-foreground">{b.authorName}</p>
+                    <p className="text-sm">{b.authorName}</p>
                   </div>
               ))}
-
-              {allBooks.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground py-2">No books found.</p>
-              )}
             </div>
 
-            <Button className="w-full mt-4" onClick={requestIssue}>Request Book</Button>
+            <Button className="w-full mt-4" onClick={requestIssue}>
+              Request Book
+            </Button>
           </DialogContent>
         </Dialog>
-
       </div>
   );
 };
