@@ -71,6 +71,7 @@
 
 
 import type { Config } from "tailwindcss";
+// @ts-ignore
 import animate from "tailwindcss-animate";
 
 const config: Config = {

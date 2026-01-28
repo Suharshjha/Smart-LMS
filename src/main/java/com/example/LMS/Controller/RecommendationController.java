@@ -61,39 +61,63 @@
 //    }
 //}
 
+package com.example.LMS.Controller;
 
-@GetMapping("/recommendations/{userId}")
-public ResponseEntity<?> getRecommendations(@PathVariable int userId) {
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 
-    try {
-        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(3000);
-        factory.setReadTimeout(5000);
+@RestController
+@RequestMapping("/user")
+public class RecommendationController {
 
-        RestTemplate restTemplate = new RestTemplate(factory);
+    @Value("${ml.service.url}")
+    private String mlBaseUrl;
 
-        Object response =
-                restTemplate.getForObject(mlBaseUrl + userId, Object.class);
+    @GetMapping("/recommendations/{userId}")
+    public ResponseEntity<?> getRecommendations(@PathVariable int userId) {
+        try {
+            SimpleClientHttpRequestFactory factory =
+                    new SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(3000);
+            factory.setReadTimeout(5000);
 
-        if (response == null) {
+            RestTemplate restTemplate = new RestTemplate(factory);
+
+            Object response = restTemplate.getForObject(
+                    mlBaseUrl + userId,
+                    Object.class
+            );
+
+            if (response == null) {
+                return ResponseEntity.ok(
+                        new MessageResponse(
+                                "Borrow more books to get personalized recommendations"
+                        )
+                );
+            }
+
+            return ResponseEntity.ok(response);
+
+        } catch (RestClientException e) {
+            e.printStackTrace();
             return ResponseEntity.ok(
-                    new RecommendationResponse(
-                            List.of(),
-                            "Borrow more books to get personalized recommendations"
+                    new MessageResponse(
+                            "Recommendations are temporarily unavailable"
                     )
             );
         }
+    }
 
-        return ResponseEntity.ok(
-                new RecommendationResponse(response, null)
-        );
+    // ✅ Simple response wrapper
+    static class MessageResponse {
+        public String message;
 
-    } catch (RestClientException e) {
-        return ResponseEntity.ok(
-                new RecommendationResponse(
-                        List.of(),
-                        "Recommendations are temporarily unavailable"
-                )
-        );
+        public MessageResponse(String message) {
+            this.message = message;
+        }
     }
 }
