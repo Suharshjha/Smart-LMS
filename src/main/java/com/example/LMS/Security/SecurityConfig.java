@@ -219,6 +219,8 @@ public class SecurityConfig {
                         .requestMatchers("/user/**").hasRole("USER")
                         .requestMatchers("/user/recommendations/**").hasAuthority("USER")
 
+                        .requestMatchers("/user/**").permitAll()
+
 
                         .anyRequest().authenticated()
                 )

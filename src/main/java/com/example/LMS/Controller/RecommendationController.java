@@ -136,7 +136,8 @@ import java.util.List;
 @RequestMapping("/user")
 public class RecommendationController {
 
-    @Value("${ml.service.url}")
+//    @Value("${ml.service.url}")
+    @Value("${ml.service.url:http://localhost:5000/recommend/}")
     private String mlBaseUrl;
 
     @GetMapping("/recommendations/{userId}")

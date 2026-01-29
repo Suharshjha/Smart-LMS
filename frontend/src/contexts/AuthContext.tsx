@@ -233,7 +233,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         userId: res.userId,
         username: res.username,
         role: res.role,
-        token: token,
+        token: res.token,
       };
 
       // ✅ SAVE ONCE, CORRECTLY
