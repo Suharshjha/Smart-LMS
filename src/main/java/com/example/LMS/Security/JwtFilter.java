@@ -126,7 +126,7 @@ public class JwtFilter extends OncePerRequestFilter {
                     if (user != null) {
 
                         // 🔥 CRITICAL FIX
-                        String springRole = "ROLE_" + role;
+                        String springRole = role;
 
                         UsernamePasswordAuthenticationToken authentication =
                                 new UsernamePasswordAuthenticationToken(

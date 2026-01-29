@@ -209,23 +209,20 @@ public class SecurityConfig {
 
                 // ✅ Authorization rules
                 .authorizeHttpRequests(auth -> auth
-                        // 🔥 REQUIRED for Netlify / Postman
+                        // Allow preflight (CORS)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        // Public auth endpoints
                         .requestMatchers("/auth/login", "/auth/register").permitAll()
 
+                        // Role-based access
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/librarian/**").hasRole("LIBRARIAN")
                         .requestMatchers("/user/**").hasRole("USER")
-                        .requestMatchers("/user/recommendations/**").hasAuthority("USER")
 
-                        .requestMatchers("/user/**").permitAll()
-
-
+                        // Everything else must be authenticated
                         .anyRequest().authenticated()
                 )
-
-                // ✅ JWT filter
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

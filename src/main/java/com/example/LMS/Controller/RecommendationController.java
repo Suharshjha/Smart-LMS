@@ -122,7 +122,6 @@
 //    }
 //}
 
-
 package com.example.LMS.Controller;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -140,9 +139,12 @@ public class RecommendationController {
     @Value("${ml.service.url:http://localhost:5000/recommend/}")
     private String mlBaseUrl;
 
+
     @GetMapping("/recommendations/{userId}")
     public ResponseEntity<List<?>> getRecommendations(@PathVariable int userId) {
         try {
+            System.out.println(mlBaseUrl);
+
             RestTemplate restTemplate = new RestTemplate();
 
             List<?> recommendations = restTemplate.getForObject(
@@ -150,6 +152,7 @@ public class RecommendationController {
                     List.class
             );
 
+            System.out.println(recommendations);
             // ✅ ALWAYS return array
             if (recommendations == null) {
                 return ResponseEntity.ok(List.of());
