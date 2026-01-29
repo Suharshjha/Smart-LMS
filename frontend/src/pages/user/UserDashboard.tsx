@@ -350,6 +350,16 @@ interface MyBook {
   status: string;
 }
 
+interface Recommendation {
+  bookId: number;
+  bookName: string;
+  authorName: string;
+  category: string;
+}
+
+
+
+
 const UserDashboard = () => {
   const navigate = useNavigate();
 
@@ -365,8 +375,12 @@ const UserDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   // Recommendation state
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  // const [recommendations, setRecommendations] = useState<any[]>([]);
 
+  const [recommendations, setRecommendations] =
+      useState<Recommendation[]>([]);
+
+  console.log("RECOMMENDATIONS RESPONSE2232 👉", recommendations);
   // Request modal
   const [open, setOpen] = useState(false);
   const [searchBook, setSearchBook] = useState("");
@@ -416,26 +430,26 @@ const UserDashboard = () => {
 
     apiFetch(`/user/recommendations/${userId}`)
         .then(res => {
+          console.log("RECOMMENDATIONS RESPONSE 👉", res);
+          // if (Array.isArray(res)) {
+          //   setRecommendations(res);
+          // }
           if (Array.isArray(res)) {
-            setRecommendations(res);
-          } else {
+            const normalized = res.map((b: any) => ({
+              bookId: b.book_id,
+              bookName: b.book_name,
+              authorName: b.author_name,
+              category: b.book_category,
+            }));
+            setRecommendations(normalized);
+          }
+          else {
             setRecommendations([]);
             if (res.message) toast.message(res.message);
           }
         })
         .catch(console.error);
   }, [userId]);
-
-  // useEffect(() => {
-  //   if (!userId) return;
-  //
-  //   apiFetch(`/user/recommendations/${userId}`)
-  //       .then((res) => {
-  //         setRecommendations(res.data ?? []);
-  //         if (res.message) toast.message(res.message);
-  //       })
-  //       .catch(console.error);
-  // }, [userId]);
 
   // --------------------------------------------
   // INITIAL LOAD
@@ -533,25 +547,64 @@ const UserDashboard = () => {
         </div>
 
         {/* Recommended Books */}
+        {/*<Card>*/}
+        {/*  <CardHeader>*/}
+        {/*    <CardTitle>Recommended For You</CardTitle>*/}
+        {/*  </CardHeader>*/}
+        {/*  <CardContent>*/}
+        {/*    {recommendations.length === 0 && (*/}
+        {/*        <p className="text-muted-foreground">*/}
+        {/*          Borrow more books to get personalized recommendations*/}
+        {/*        </p>*/}
+        {/*    )}*/}
+
+        {/*    /!*{recommendations.map((b) => (*!/*/}
+        {/*    /!*    <div key={b.book_id} className="p-3 border rounded mb-2">*!/*/}
+        {/*    /!*      <p className="font-medium">{b.book_name}</p>*!/*/}
+        {/*    /!*      <p className="text-sm text-muted-foreground">*!/*/}
+        {/*    /!*        {b.author_name} • {b.book_category}*!/*/}
+        {/*    /!*      </p>*!/*/}
+        {/*    /!*    </div>*!/*/}
+        {/*    /!*))}*!/*/}
+
+        {/*    {recommendations.map((b) => (*/}
+        {/*        <div key={b.bookId} className="p-3 border rounded mb-2">*/}
+        {/*          <p className="font-medium">{b.bookName}</p>*/}
+        {/*          <p className="text-sm text-muted-foreground">*/}
+        {/*            {b.authorName} • {b.category}*/}
+        {/*          </p>*/}
+        {/*        </div>*/}
+        {/*    ))}*/}
+
+        {/*  </CardContent>*/}
+        {/*</Card>*/}
+
+
+
+        {/* Recommended Books */}
         <Card>
           <CardHeader>
             <CardTitle>Recommended For You</CardTitle>
           </CardHeader>
+
           <CardContent>
-            {recommendations.length === 0 && (
+            {recommendations.length === 0 ? (
                 <p className="text-muted-foreground">
                   Borrow more books to get personalized recommendations
                 </p>
+            ) : (
+                recommendations.map((b) => (
+                    <div
+                        key={b.bookId}
+                        className="p-3 border rounded mb-2"
+                    >
+                      <p className="font-medium">{b.bookName}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {b.authorName} • {b.category}
+                      </p>
+                    </div>
+                ))
             )}
-
-            {recommendations.map((b) => (
-                <div key={b.book_id} className="p-3 border rounded mb-2">
-                  <p className="font-medium">{b.book_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {b.author_name} • {b.book_category}
-                  </p>
-                </div>
-            ))}
           </CardContent>
         </Card>
 
