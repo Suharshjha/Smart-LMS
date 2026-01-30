@@ -171,6 +171,7 @@ package com.example.LMS.Security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -201,7 +202,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 // ✅ Enable CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+//                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(Customizer.withDefaults())
+
 
                 // ❌ Disable default auth
                 .httpBasic(httpBasic -> httpBasic.disable())
@@ -243,6 +246,7 @@ public class SecurityConfig {
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
+//        config.setAllowedHeaders(List.of("*"));
         config.setAllowedHeaders(List.of(
                 "Authorization",
                 "Content-Type",
@@ -250,6 +254,7 @@ public class SecurityConfig {
                 "Accept",
                 "Origin"
         ));
+
 
         config.setAllowCredentials(true);
 
