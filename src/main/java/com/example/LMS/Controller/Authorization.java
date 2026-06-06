@@ -24,5 +24,4 @@ public class Authorization {
         LoginResponse response = authService.login(request);
         return ResponseEntity.ok(response);
     }
-
 }

@@ -26,7 +26,6 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-
         try {
             System.out.println("Login step 1: Fetching user...");
 

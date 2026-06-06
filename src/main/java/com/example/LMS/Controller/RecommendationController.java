@@ -1,52 +1,3 @@
-//package com.example.LMS.Controller;
-//
-//import org.springframework.beans.factory.annotation.Value;
-//import org.springframework.http.ResponseEntity;
-//import org.springframework.web.bind.annotation.*;
-//import org.springframework.web.client.RestTemplate;
-//
-//import java.util.List;
-//
-//@RestController
-//@RequestMapping("/user")
-//public class RecommendationController {
-//
-//
-//    //    @Value("${ml.service.url:http://localhost:5000/recommend/}")
-//    @Value("${ml.service.url}")
-//    private String mlBaseUrl;
-//
-//    @GetMapping("/recommendations/{userId}")
-//    public ResponseEntity<List<?>> getRecommendations(@PathVariable int userId) {
-//        try {
-//            System.out.println(mlBaseUrl);
-//
-//            RestTemplate restTemplate = new RestTemplate();
-//
-//            List<?> recommendations = restTemplate.getForObject(
-//                    mlBaseUrl + userId,
-//                    List.class
-//            );
-//
-//            System.out.println(recommendations);
-//            // ✅ ALWAYS return array
-//            if (recommendations == null) {
-//                return ResponseEntity.ok(List.of());
-//            }
-//
-//            return ResponseEntity.ok(recommendations);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            // ✅ Fail-safe empty list
-//            return ResponseEntity.ok(List.of());
-//        }
-//    }
-//
-//}
-//
-
-
 package com.example.LMS.Controller;
 
 import com.example.LMS.Dto.Response.RecommendationResponse;
@@ -76,13 +27,16 @@ public class RecommendationController {
             RestTemplate restTemplate = new RestTemplate();
 
             // 🔹 Raw ML response (snake_case)
+            System.out.println("inside recom controller");
+            System.out.println("Calling ML URL = " + mlBaseUrl + userId);
             List<Map<String, Object>> mlResponse =
                     restTemplate.getForObject(
                             mlBaseUrl + userId,
                             List.class
                     );
 
-            System.out.println(mlResponse);
+
+            System.out.println("response:"+ mlResponse);
             if (mlResponse == null || mlResponse.isEmpty()) {
                 return ResponseEntity.ok(
                         new RecommendationResponse(

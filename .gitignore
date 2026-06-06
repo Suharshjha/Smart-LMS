@@ -38,3 +38,9 @@ frontend/node_modules/
 frontend/dist/
 frontend/.env
 frontend/.vite/
+
+# Python
+Recommendation_ML/.env
+Recommendation_ML/venv/
+Recommendation_ML/__pycache__/
+*.pyc
